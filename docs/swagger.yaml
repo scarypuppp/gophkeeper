@@ -1,0 +1,1108 @@
+basePath: /
+definitions:
+  api.CardItemResponse:
+    properties:
+      checksum:
+        type: string
+      created_at:
+        type: string
+      holder:
+        type: string
+      metadata:
+        type: string
+      name:
+        type: string
+      number:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  api.CardResponse:
+    properties:
+      checksum:
+        type: string
+      created_at:
+        type: string
+      cvv:
+        type: string
+      expires_at:
+        type: string
+      holder:
+        type: string
+      metadata:
+        type: string
+      name:
+        type: string
+      number:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  api.CreateCardRequest:
+    properties:
+      cvv:
+        type: string
+      expires_at:
+        type: string
+      holder:
+        type: string
+      metadata:
+        type: string
+      name:
+        type: string
+      number:
+        type: string
+    type: object
+  api.CreateFileResponse:
+    properties:
+      checksum:
+        type: string
+      created_at:
+        type: string
+      file_hash:
+        type: string
+      file_name:
+        type: string
+      metadata:
+        type: string
+      size:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  api.CreateSecretRequest:
+    properties:
+      login:
+        type: string
+      metadata:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+    type: object
+  api.CreateTextRequest:
+    properties:
+      metadata:
+        type: string
+      name:
+        type: string
+      text:
+        type: string
+    type: object
+  api.FileItemResponse:
+    properties:
+      checksum:
+        type: string
+      created_at:
+        type: string
+      file_hash:
+        type: string
+      file_name:
+        type: string
+      file_url:
+        type: string
+      metadata:
+        type: string
+      size:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  api.FileResponse:
+    properties:
+      checksum:
+        type: string
+      created_at:
+        type: string
+      file_hash:
+        type: string
+      file_name:
+        type: string
+      metadata:
+        type: string
+      size:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  api.LoginRequest:
+    properties:
+      login:
+        type: string
+      password:
+        type: string
+    type: object
+  api.LoginResponse:
+    properties:
+      access_token:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  api.RegisterRequest:
+    properties:
+      login:
+        type: string
+      password:
+        type: string
+    type: object
+  api.SecretItemResponse:
+    properties:
+      checksum:
+        type: string
+      created_at:
+        type: string
+      login:
+        type: string
+      metadata:
+        type: string
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  api.SecretResponse:
+    properties:
+      checksum:
+        type: string
+      created_at:
+        type: string
+      login:
+        type: string
+      metadata:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  api.TextItemResponse:
+    properties:
+      checksum:
+        type: string
+      created_at:
+        type: string
+      metadata:
+        type: string
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  api.TextResponse:
+    properties:
+      checksum:
+        type: string
+      created_at:
+        type: string
+      metadata:
+        type: string
+      name:
+        type: string
+      text:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  api.UpdateCardRequest:
+    properties:
+      cvv:
+        type: string
+      expires_at:
+        type: string
+      holder:
+        type: string
+      metadata:
+        type: string
+      number:
+        type: string
+    type: object
+  api.UpdateFileRequest:
+    properties:
+      metadata:
+        type: string
+    type: object
+  api.UpdateSecretRequest:
+    properties:
+      login:
+        type: string
+      metadata:
+        type: string
+      password:
+        type: string
+    type: object
+  api.UpdateTextRequest:
+    properties:
+      metadata:
+        type: string
+      text:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: Менеджер паролей GophKeeper
+  title: GophKeeper API
+  version: "1.0"
+paths:
+  /api/card:
+    get:
+      description: Возвращает карты текущего пользователя без CVV и срока действия
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/api.CardItemResponse'
+            type: array
+        "401":
+          description: Пользователь не аутентифицирован
+          schema:
+            type: string
+        "500":
+          description: Внутренняя ошибка
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Список карт пользователя
+      tags:
+      - card
+    post:
+      consumes:
+      - application/json
+      description: Сохраняет данные банковской карты текущего пользователя. Имя карты
+        уникально в рамках пользователя
+      parameters:
+      - description: Данные карты
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateCardRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.CardResponse'
+        "400":
+          description: Неверный формат запроса
+          schema:
+            type: string
+        "401":
+          description: Пользователь не аутентифицирован
+          schema:
+            type: string
+        "409":
+          description: Карта с таким именем уже существует
+          schema:
+            type: string
+        "500":
+          description: Внутренняя ошибка
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Создание банковской карты
+      tags:
+      - card
+  /api/card/{card_name}:
+    delete:
+      description: Удаляет карту текущего пользователя по имени
+      parameters:
+      - description: Имя карты
+        in: path
+        name: card_name
+        required: true
+        type: string
+      produces:
+      - text/plain
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Неверный формат запроса
+          schema:
+            type: string
+        "401":
+          description: Пользователь не аутентифицирован
+          schema:
+            type: string
+        "404":
+          description: Карта не найдена
+          schema:
+            type: string
+        "500":
+          description: Внутренняя ошибка
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Удаление карты
+      tags:
+      - card
+    get:
+      description: Возвращает данные карты текущего пользователя по имени
+      parameters:
+      - description: Имя карты
+        in: path
+        name: card_name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.CardResponse'
+        "400":
+          description: Неверный формат запроса
+          schema:
+            type: string
+        "401":
+          description: Пользователь не аутентифицирован
+          schema:
+            type: string
+        "404":
+          description: Карта не найдена
+          schema:
+            type: string
+        "500":
+          description: Внутренняя ошибка
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Получение карты
+      tags:
+      - card
+    put:
+      consumes:
+      - application/json
+      description: Полностью перезаписывает данные карты текущего пользователя, найденной
+        по имени
+      parameters:
+      - description: Имя карты
+        in: path
+        name: card_name
+        required: true
+        type: string
+      - description: Новые данные карты
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateCardRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.CardResponse'
+        "400":
+          description: Неверный формат запроса
+          schema:
+            type: string
+        "401":
+          description: Пользователь не аутентифицирован
+          schema:
+            type: string
+        "404":
+          description: Карта не найдена
+          schema:
+            type: string
+        "500":
+          description: Внутренняя ошибка
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Обновление карты
+      tags:
+      - card
+  /api/file:
+    get:
+      description: Возвращает список файлов, загруженных текущим пользователем
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/api.FileItemResponse'
+            type: array
+        "401":
+          description: Пользователь не аутентифицирован
+          schema:
+            type: string
+        "500":
+          description: Внутренняя ошибка
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Список файлов пользователя
+      tags:
+      - file
+  /api/file/{file_hash}/{file_name}:
+    delete:
+      description: Удаляет файл пользователя из хранилища вместе с его метаданными
+      parameters:
+      - description: Хэш файла
+        in: path
+        name: file_hash
+        required: true
+        type: string
+      - description: Имя файла
+        in: path
+        name: file_name
+        required: true
+        type: string
+      produces:
+      - text/plain
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Неверный формат запроса
+          schema:
+            type: string
+        "401":
+          description: Пользователь не аутентифицирован
+          schema:
+            type: string
+        "404":
+          description: Файл не найден
+          schema:
+            type: string
+        "500":
+          description: Внутренняя ошибка
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Удаление файла
+      tags:
+      - file
+    get:
+      description: Возвращает содержимое файла пользователя по хэшу и имени файла
+      parameters:
+      - description: Хэш файла
+        in: path
+        name: file_hash
+        required: true
+        type: string
+      - description: Имя файла
+        in: path
+        name: file_name
+        required: true
+        type: string
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: Содержимое файла
+          schema:
+            type: file
+        "400":
+          description: Неверный формат запроса
+          schema:
+            type: string
+        "404":
+          description: Файл не найден
+          schema:
+            type: string
+        "500":
+          description: Внутренняя ошибка
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Получение файла
+      tags:
+      - file
+    put:
+      consumes:
+      - multipart/form-data
+      description: |-
+        Перезаписывает содержимое файла пользователя. Хэш, имя и метаданные остаются прежними,
+        обновляются контрольная сумма, размер и время загрузки
+      parameters:
+      - description: Хэш файла
+        in: path
+        name: file_hash
+        required: true
+        type: string
+      - description: Имя файла
+        in: path
+        name: file_name
+        required: true
+        type: string
+      - description: Новое содержимое файла
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.FileResponse'
+        "400":
+          description: Неверный формат запроса
+          schema:
+            type: string
+        "401":
+          description: Пользователь не аутентифицирован
+          schema:
+            type: string
+        "404":
+          description: Файл не найден
+          schema:
+            type: string
+        "500":
+          description: Внутренняя ошибка
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Обновление файла
+      tags:
+      - file
+  /api/file/{file_hash}/{file_name}/metadata:
+    put:
+      consumes:
+      - application/json
+      description: Меняет только метаданные файла, содержимое в хранилище остаётся
+        прежним
+      parameters:
+      - description: Хэш файла
+        in: path
+        name: file_hash
+        required: true
+        type: string
+      - description: Имя файла
+        in: path
+        name: file_name
+        required: true
+        type: string
+      - description: Новые метаданные
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateFileRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.FileResponse'
+        "400":
+          description: Неверный формат запроса
+          schema:
+            type: string
+        "401":
+          description: Пользователь не аутентифицирован
+          schema:
+            type: string
+        "404":
+          description: Файл не найден
+          schema:
+            type: string
+        "500":
+          description: Внутренняя ошибка
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Обновление метаданных файла
+      tags:
+      - file
+  /api/file/upload:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Загружает файл в S3-хранилище и сохраняет его метаданные для текущего
+        пользователя
+      parameters:
+      - description: Загружаемый файл
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: Произвольные метаданные
+        in: formData
+        name: metadata
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.CreateFileResponse'
+        "400":
+          description: Неверный формат запроса
+          schema:
+            type: string
+        "409":
+          description: Файл с таким содержимым уже загружен
+          schema:
+            type: string
+        "500":
+          description: Внутренняя ошибка
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Загрузка файла
+      tags:
+      - file
+  /api/secret:
+    get:
+      description: Возвращает секреты текущего пользователя без паролей
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/api.SecretItemResponse'
+            type: array
+        "401":
+          description: Пользователь не аутентифицирован
+          schema:
+            type: string
+        "500":
+          description: Внутренняя ошибка
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Список секретов пользователя
+      tags:
+      - secret
+    post:
+      consumes:
+      - application/json
+      description: Создаёт секрет текущего пользователя. Имя секрета уникально в рамках
+        пользователя
+      parameters:
+      - description: Данные секрета
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateSecretRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.SecretResponse'
+        "400":
+          description: Неверный формат запроса
+          schema:
+            type: string
+        "401":
+          description: Пользователь не аутентифицирован
+          schema:
+            type: string
+        "409":
+          description: Секрет с таким именем уже существует
+          schema:
+            type: string
+        "500":
+          description: Внутренняя ошибка
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Создание секрета
+      tags:
+      - secret
+  /api/secret/{secret_name}:
+    delete:
+      description: Удаляет секрет текущего пользователя по имени
+      parameters:
+      - description: Имя секрета
+        in: path
+        name: secret_name
+        required: true
+        type: string
+      produces:
+      - text/plain
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Неверный формат запроса
+          schema:
+            type: string
+        "401":
+          description: Пользователь не аутентифицирован
+          schema:
+            type: string
+        "404":
+          description: Секрет не найден
+          schema:
+            type: string
+        "500":
+          description: Внутренняя ошибка
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Удаление секрета
+      tags:
+      - secret
+    get:
+      description: Возвращает секрет текущего пользователя по имени
+      parameters:
+      - description: Имя секрета
+        in: path
+        name: secret_name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.SecretResponse'
+        "400":
+          description: Неверный формат запроса
+          schema:
+            type: string
+        "401":
+          description: Пользователь не аутентифицирован
+          schema:
+            type: string
+        "404":
+          description: Секрет не найден
+          schema:
+            type: string
+        "500":
+          description: Внутренняя ошибка
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Получение секрета
+      tags:
+      - secret
+    put:
+      consumes:
+      - application/json
+      description: Полностью перезаписывает содержимое секрета текущего пользователя,
+        найденного по имени
+      parameters:
+      - description: Имя секрета
+        in: path
+        name: secret_name
+        required: true
+        type: string
+      - description: Новые данные секрета
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateSecretRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.SecretResponse'
+        "400":
+          description: Неверный формат запроса
+          schema:
+            type: string
+        "401":
+          description: Пользователь не аутентифицирован
+          schema:
+            type: string
+        "404":
+          description: Секрет не найден
+          schema:
+            type: string
+        "500":
+          description: Внутренняя ошибка
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Обновление секрета
+      tags:
+      - secret
+  /api/text:
+    get:
+      description: Возвращает имена и метаданные текстов текущего пользователя без
+        их содержимого
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/api.TextItemResponse'
+            type: array
+        "401":
+          description: Пользователь не аутентифицирован
+          schema:
+            type: string
+        "500":
+          description: Внутренняя ошибка
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Список текстовых данных пользователя
+      tags:
+      - text
+    post:
+      consumes:
+      - application/json
+      description: Сохраняет произвольные текстовые данные текущего пользователя.
+        Имя уникально в рамках пользователя
+      parameters:
+      - description: Текстовые данные
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateTextRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.TextResponse'
+        "400":
+          description: Неверный формат запроса
+          schema:
+            type: string
+        "401":
+          description: Пользователь не аутентифицирован
+          schema:
+            type: string
+        "409":
+          description: Текст с таким именем уже существует
+          schema:
+            type: string
+        "500":
+          description: Внутренняя ошибка
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Создание текстовых данных
+      tags:
+      - text
+  /api/text/{text_name}:
+    delete:
+      description: Удаляет текстовые данные текущего пользователя по имени
+      parameters:
+      - description: Имя текста
+        in: path
+        name: text_name
+        required: true
+        type: string
+      produces:
+      - text/plain
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Неверный формат запроса
+          schema:
+            type: string
+        "401":
+          description: Пользователь не аутентифицирован
+          schema:
+            type: string
+        "404":
+          description: Текст не найден
+          schema:
+            type: string
+        "500":
+          description: Внутренняя ошибка
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Удаление текстовых данных
+      tags:
+      - text
+    get:
+      description: Возвращает текстовые данные текущего пользователя по имени
+      parameters:
+      - description: Имя текста
+        in: path
+        name: text_name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.TextResponse'
+        "400":
+          description: Неверный формат запроса
+          schema:
+            type: string
+        "401":
+          description: Пользователь не аутентифицирован
+          schema:
+            type: string
+        "404":
+          description: Текст не найден
+          schema:
+            type: string
+        "500":
+          description: Внутренняя ошибка
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Получение текстовых данных
+      tags:
+      - text
+    put:
+      consumes:
+      - application/json
+      description: Полностью перезаписывает текстовые данные текущего пользователя,
+        найденные по имени
+      parameters:
+      - description: Имя текста
+        in: path
+        name: text_name
+        required: true
+        type: string
+      - description: Новые текстовые данные
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateTextRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.TextResponse'
+        "400":
+          description: Неверный формат запроса
+          schema:
+            type: string
+        "401":
+          description: Пользователь не аутентифицирован
+          schema:
+            type: string
+        "404":
+          description: Текст не найден
+          schema:
+            type: string
+        "500":
+          description: Внутренняя ошибка
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Обновление текстовых данных
+      tags:
+      - text
+  /api/user/login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Данные пользователя
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.LoginResponse'
+        "400":
+          description: Неверный формат запроса
+          schema:
+            type: string
+        "401":
+          description: Неверный логин или пароль
+          schema:
+            type: string
+        "500":
+          description: Внутренняя ошибка
+          schema:
+            type: string
+      summary: Аутентификация пользователя
+      tags:
+      - auth
+  /api/user/register:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Данные пользователя
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.RegisterRequest'
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Неверный формат запроса или недопустимая длина логина либо
+            пароля
+          schema:
+            type: string
+        "409":
+          description: Логин уже занят
+          schema:
+            type: string
+        "500":
+          description: Внутренняя ошибка
+          schema:
+            type: string
+      summary: Регистрация пользователя
+      tags:
+      - auth
+securityDefinitions:
+  BearerAuth:
+    description: 'Введите токен в формате: Bearer {token}'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

@@ -1,0 +1,4 @@
+ALTER TABLE files
+    DROP COLUMN IF EXISTS checksum,
+    DROP COLUMN IF EXISTS size,
+    DROP COLUMN IF EXISTS uploaded_at;

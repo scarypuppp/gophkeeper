@@ -380,6 +380,12 @@
                             "type": "string"
                         }
                     },
+                    "413": {
+                        "description": "Файл превышает допустимый размер",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
                     "500": {
                         "description": "Внутренняя ошибка",
                         "schema": {
@@ -508,6 +514,12 @@
                     },
                     "404": {
                         "description": "Файл не найден",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "413": {
+                        "description": "Файл превышает допустимый размер",
                         "schema": {
                             "type": "string"
                         }
@@ -1275,7 +1287,7 @@
                     "application/json"
                 ],
                 "produces": [
-                    "text/plain"
+                    "application/json"
                 ],
                 "tags": [
                     "auth"
@@ -1294,7 +1306,10 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK"
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.LoginResponse"
+                        }
                     },
                     "400": {
                         "description": "Неверный формат запроса или недопустимая длина логина либо пароля",

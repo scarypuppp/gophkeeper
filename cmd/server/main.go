@@ -1,7 +1,11 @@
 package main
 
 import (
+	"context"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/scarypuppp/gophkeeper/internal/server/app"
 	"github.com/scarypuppp/gophkeeper/internal/server/config"
@@ -18,12 +22,20 @@ import (
 // @name Authorization
 // @description Введите токен в формате: Bearer {token}
 func main() {
+	if err := run(); err != nil {
+		log.Printf("gophkeeper server: %v", err)
+		os.Exit(1)
+	}
+}
+
+// run поднимает сервер и возвращает ошибку вызывающей стороне.
+func run() error {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
 	cfg, err := config.GetConfig()
 	if err != nil {
-		panic(err)
+		return err
 	}
-	s := app.NewServer(cfg)
-	if err := s.Run(); err != nil {
-		log.Fatalf("Error running server")
-	}
+	return app.NewServer(cfg).Run(ctx)
 }

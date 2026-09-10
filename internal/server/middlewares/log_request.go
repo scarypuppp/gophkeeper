@@ -21,7 +21,7 @@ func (m *Middleware) LogRequest(handler http.Handler) http.Handler {
 			zap.Duration("duration", time.Since(start)),
 		}
 
-		if userID, ok := r.Context().Value(UserIDKey).(int64); ok {
+		if userID, ok := UserIDFromContext(r.Context()); ok {
 			fields = append(fields, zap.Int64("user_id", userID))
 		}
 

@@ -60,12 +60,12 @@ func (r *CardRepositoryPostgres) CreateCard(ctx context.Context, card entities.C
     RETURNING id, created_at, updated_at`
 	rows, err := sqlx.NamedQueryContext(ctx, r.exec, insertQuery, card)
 	if err != nil {
-		return nil, fmt.Errorf("CreateCard: %w", err)
+		return nil, wrapError("CreateCard", err)
 	}
 	defer rows.Close()
 	if !rows.Next() {
 		if err := rows.Err(); err != nil {
-			return nil, fmt.Errorf("CreateCard: rows iteration: %w", err)
+			return nil, wrapError("CreateCard: rows iteration", err)
 		}
 		return nil, fmt.Errorf("CreateCard: no id returned after insert")
 	}

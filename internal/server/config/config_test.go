@@ -54,13 +54,19 @@ func TestParseConfig_MissingDatabaseURI(t *testing.T) {
 	assert.ErrorContains(t, err, "database uri")
 }
 
-func TestParseConfig_Defaults(t *testing.T) {
+func TestParseConfig_MissingSecretKey(t *testing.T) {
 	t.Setenv("SECRET_KEY", "")
 	t.Setenv("RUN_ADDRESS", "localhost:8080")
 	t.Setenv("DATABASE_URI", "postgres://localhost/db")
-	t.Setenv("ACCRUAL_SYSTEM_ADDRESS", "localhost:9090")
+	_, err := parseConfig(nil)
+	assert.ErrorContains(t, err, "secret key")
+}
+
+func TestParseConfig_Defaults(t *testing.T) {
+	t.Setenv("SECRET_KEY", "s")
+	t.Setenv("RUN_ADDRESS", "localhost:8080")
+	t.Setenv("DATABASE_URI", "postgres://localhost/db")
 	cfg, err := parseConfig(nil)
 	require.NoError(t, err)
 	assert.Equal(t, int64(defaultTokenExpiresSeconds), cfg.TokenExpSeconds)
-	assert.Equal(t, defaultSecretKey, cfg.SecretKey)
 }

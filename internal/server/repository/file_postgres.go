@@ -80,12 +80,12 @@ func (r *FileRepositoryPostgres) CreateFile(ctx context.Context, file entities.F
     RETURNING id, created_at, updated_at`
 	rows, err := sqlx.NamedQueryContext(ctx, r.exec, insertQuery, file)
 	if err != nil {
-		return nil, fmt.Errorf("CreateFile: %w", err)
+		return nil, wrapError("CreateFile", err)
 	}
 	defer rows.Close()
 	if !rows.Next() {
 		if err := rows.Err(); err != nil {
-			return nil, fmt.Errorf("CreateFile: rows iteration: %w", err)
+			return nil, wrapError("CreateFile: rows iteration", err)
 		}
 		return nil, fmt.Errorf("CreateFile: no id returned after insert")
 	}

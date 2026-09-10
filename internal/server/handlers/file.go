@@ -1,11 +1,11 @@
 package handlers
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"net/url"
 	"path/filepath"
@@ -16,7 +16,17 @@ import (
 	"go.uber.org/zap"
 )
 
-const maxUploadSize = 1 << 30 // 1 GiB
+// maxUploadSize ограничивает размер тела запроса,
+// multipartMemory — объём формы, который держим в памяти.
+const (
+	maxUploadSize   = api.MaxFileUploadSize
+	multipartMemory = 32 << 20 // 32 MiB
+)
+
+// multipartOverhead — запас на заголовки частей формы и поле metadata.
+const multipartOverhead = 1 << 20 // 1 MiB
+
+var uploadTooLargeMessage = fmt.Sprintf("file is too large: limit is %d bytes", int64(maxUploadSize))
 
 // CREATE FILE
 
@@ -33,40 +43,29 @@ const maxUploadSize = 1 << 30 // 1 GiB
 //	@Success		200		{object}	api.CreateFileResponse
 //	@Failure		400		{string}	string	"Неверный формат запроса"
 //	@Failure		409		{string}	string	"Файл с таким содержимым уже загружен"
+//	@Failure		413		{string}	string	"Файл превышает допустимый размер"
 //	@Failure		500		{string}	string	"Внутренняя ошибка"
 //	@Router			/api/file/upload [post]
 func (h *Handler) CreateFile(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value(middlewares.UserIDKey).(int64)
+	userID, ok := middlewares.UserIDFromContext(r.Context())
 	if !ok {
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		return
 	}
 
-	if err := r.ParseMultipartForm(maxUploadSize); err != nil {
-		http.Error(w, "invalid multipart form", http.StatusBadRequest)
-		return
-	}
-
-	file, header, err := r.FormFile("file")
-	if err != nil {
-		http.Error(w, "file form field is required", http.StatusBadRequest)
+	file, header, ok := openUploadedFile(w, r)
+	if !ok {
 		return
 	}
 	defer file.Close()
-
-	var buf bytes.Buffer
-	if _, err := io.Copy(&buf, file); err != nil {
-		http.Error(w, "failed to read file", http.StatusBadRequest)
-		return
-	}
 
 	created, err := h.fileService.CreateFile(
 		r.Context(),
 		userID,
 		header.Filename,
 		r.FormValue("metadata"),
-		int64(buf.Len()),
-		bytes.NewReader(buf.Bytes()),
+		header.Size,
+		file,
 	)
 	if err != nil {
 		switch {
@@ -107,7 +106,7 @@ func (h *Handler) CreateFile(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500			{string}	string	"Внутренняя ошибка"
 //	@Router			/api/file/{file_hash}/{file_name} [get]
 func (h *Handler) GetFile(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value(middlewares.UserIDKey).(int64)
+	userID, ok := middlewares.UserIDFromContext(r.Context())
 	if !ok {
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		return
@@ -163,7 +162,7 @@ func (h *Handler) GetFile(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500	{string}	string	"Внутренняя ошибка"
 //	@Router			/api/file [get]
 func (h *Handler) GetFiles(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value(middlewares.UserIDKey).(int64)
+	userID, ok := middlewares.UserIDFromContext(r.Context())
 	if !ok {
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		return
@@ -213,7 +212,7 @@ func (h *Handler) GetFiles(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500			{string}	string	"Внутренняя ошибка"
 //	@Router			/api/file/{file_hash}/{file_name}/metadata [put]
 func (h *Handler) UpdateFileMetadata(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value(middlewares.UserIDKey).(int64)
+	userID, ok := middlewares.UserIDFromContext(r.Context())
 	if !ok {
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		return
@@ -273,10 +272,11 @@ func (h *Handler) UpdateFileMetadata(w http.ResponseWriter, r *http.Request) {
 //	@Failure		400			{string}	string	"Неверный формат запроса"
 //	@Failure		401			{string}	string	"Пользователь не аутентифицирован"
 //	@Failure		404			{string}	string	"Файл не найден"
+//	@Failure		413			{string}	string	"Файл превышает допустимый размер"
 //	@Failure		500			{string}	string	"Внутренняя ошибка"
 //	@Router			/api/file/{file_hash}/{file_name} [put]
 func (h *Handler) UpdateFile(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value(middlewares.UserIDKey).(int64)
+	userID, ok := middlewares.UserIDFromContext(r.Context())
 	if !ok {
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		return
@@ -289,31 +289,19 @@ func (h *Handler) UpdateFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := r.ParseMultipartForm(maxUploadSize); err != nil {
-		http.Error(w, "invalid multipart form", http.StatusBadRequest)
-		return
-	}
-
-	content, _, err := r.FormFile("file")
-	if err != nil {
-		http.Error(w, "file form field is required", http.StatusBadRequest)
+	content, header, ok := openUploadedFile(w, r)
+	if !ok {
 		return
 	}
 	defer content.Close()
-
-	var buf bytes.Buffer
-	if _, err := io.Copy(&buf, content); err != nil {
-		http.Error(w, "failed to read file", http.StatusBadRequest)
-		return
-	}
 
 	file, err := h.fileService.UpdateFileContent(
 		r.Context(),
 		userID,
 		fileHash,
 		fileName,
-		int64(buf.Len()),
-		bytes.NewReader(buf.Bytes()),
+		header.Size,
+		content,
 	)
 	if err != nil {
 		switch {
@@ -355,7 +343,7 @@ func (h *Handler) UpdateFile(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500	{string}	string	"Внутренняя ошибка"
 //	@Router			/api/file/{file_hash}/{file_name} [delete]
 func (h *Handler) DeleteFile(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value(middlewares.UserIDKey).(int64)
+	userID, ok := middlewares.UserIDFromContext(r.Context())
 	if !ok {
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		return
@@ -380,4 +368,32 @@ func (h *Handler) DeleteFile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// openUploadedFile разбирает multipart-форму и отдаёт поле "file".
+// При ошибке сама пишет ответ и возвращает false.
+func openUploadedFile(w http.ResponseWriter, r *http.Request) (multipart.File, *multipart.FileHeader, bool) {
+	r.Body = http.MaxBytesReader(w, r.Body, maxUploadSize+multipartOverhead)
+
+	if err := r.ParseMultipartForm(multipartMemory); err != nil {
+		var tooLarge *http.MaxBytesError
+		if errors.As(err, &tooLarge) {
+			http.Error(w, uploadTooLargeMessage, http.StatusRequestEntityTooLarge)
+			return nil, nil, false
+		}
+		http.Error(w, "invalid multipart form", http.StatusBadRequest)
+		return nil, nil, false
+	}
+
+	file, header, err := r.FormFile("file")
+	if err != nil {
+		http.Error(w, "file form field is required", http.StatusBadRequest)
+		return nil, nil, false
+	}
+	if header.Size > maxUploadSize {
+		file.Close()
+		http.Error(w, uploadTooLargeMessage, http.StatusRequestEntityTooLarge)
+		return nil, nil, false
+	}
+	return file, header, true
 }

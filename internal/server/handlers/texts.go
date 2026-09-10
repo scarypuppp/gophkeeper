@@ -30,7 +30,7 @@ import (
 //	@Failure		500		{string}	string	"Внутренняя ошибка"
 //	@Router			/api/text [post]
 func (h *Handler) CreateText(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value(middlewares.UserIDKey).(int64)
+	userID, ok := middlewares.UserIDFromContext(r.Context())
 	if !ok {
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		return
@@ -81,7 +81,7 @@ func (h *Handler) CreateText(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500	{string}	string	"Внутренняя ошибка"
 //	@Router			/api/text [get]
 func (h *Handler) GetTexts(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value(middlewares.UserIDKey).(int64)
+	userID, ok := middlewares.UserIDFromContext(r.Context())
 	if !ok {
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		return
@@ -125,7 +125,7 @@ func (h *Handler) GetTexts(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500			{string}	string	"Внутренняя ошибка"
 //	@Router			/api/text/{text_name} [get]
 func (h *Handler) GetText(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value(middlewares.UserIDKey).(int64)
+	userID, ok := middlewares.UserIDFromContext(r.Context())
 	if !ok {
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		return
@@ -171,7 +171,7 @@ func (h *Handler) GetText(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500			{string}	string	"Внутренняя ошибка"
 //	@Router			/api/text/{text_name} [put]
 func (h *Handler) UpdateText(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value(middlewares.UserIDKey).(int64)
+	userID, ok := middlewares.UserIDFromContext(r.Context())
 	if !ok {
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		return
@@ -227,7 +227,7 @@ func (h *Handler) UpdateText(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500	{string}	string	"Внутренняя ошибка"
 //	@Router			/api/text/{text_name} [delete]
 func (h *Handler) DeleteText(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value(middlewares.UserIDKey).(int64)
+	userID, ok := middlewares.UserIDFromContext(r.Context())
 	if !ok {
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		return

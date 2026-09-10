@@ -59,12 +59,12 @@ func (r *UserRepositoryPostgres) CreateUser(ctx context.Context, user entities.U
     RETURNING id`
 	rows, err := sqlx.NamedQueryContext(ctx, r.exec, insertQuery, user)
 	if err != nil {
-		return nil, fmt.Errorf("CreateUser: %w", err)
+		return nil, wrapError("CreateUser", err)
 	}
 	defer rows.Close()
 	if !rows.Next() {
 		if err := rows.Err(); err != nil {
-			return nil, fmt.Errorf("CreateUser: rows iteration: %w", err)
+			return nil, wrapError("CreateUser: rows iteration", err)
 		}
 		return nil, fmt.Errorf("CreateUser: no id returned after insert")
 	}

@@ -30,7 +30,7 @@ import (
 //	@Failure		500		{string}	string	"Внутренняя ошибка"
 //	@Router			/api/card [post]
 func (h *Handler) CreateCard(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value(middlewares.UserIDKey).(int64)
+	userID, ok := middlewares.UserIDFromContext(r.Context())
 	if !ok {
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		return
@@ -84,7 +84,7 @@ func (h *Handler) CreateCard(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500	{string}	string	"Внутренняя ошибка"
 //	@Router			/api/card [get]
 func (h *Handler) GetCards(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value(middlewares.UserIDKey).(int64)
+	userID, ok := middlewares.UserIDFromContext(r.Context())
 	if !ok {
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		return
@@ -130,7 +130,7 @@ func (h *Handler) GetCards(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500			{string}	string	"Внутренняя ошибка"
 //	@Router			/api/card/{card_name} [get]
 func (h *Handler) GetCard(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value(middlewares.UserIDKey).(int64)
+	userID, ok := middlewares.UserIDFromContext(r.Context())
 	if !ok {
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		return
@@ -176,7 +176,7 @@ func (h *Handler) GetCard(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500			{string}	string	"Внутренняя ошибка"
 //	@Router			/api/card/{card_name} [put]
 func (h *Handler) UpdateCard(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value(middlewares.UserIDKey).(int64)
+	userID, ok := middlewares.UserIDFromContext(r.Context())
 	if !ok {
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		return
@@ -235,7 +235,7 @@ func (h *Handler) UpdateCard(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500	{string}	string	"Внутренняя ошибка"
 //	@Router			/api/card/{card_name} [delete]
 func (h *Handler) DeleteCard(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value(middlewares.UserIDKey).(int64)
+	userID, ok := middlewares.UserIDFromContext(r.Context())
 	if !ok {
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		return

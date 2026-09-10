@@ -87,28 +87,17 @@ func (fs *FileService) CreateFile(
 	size int64,
 	file io.Reader,
 ) (*entities.File, error) {
-	// Валидация
-	_, err := fs.uow.Files().GetByName(ctx, userID, fileName)
-	if err == nil {
-		return nil, ErrFileAlreadyExists
-	}
-	if !errors.Is(err, repository.ErrNoRows) {
-		return nil, fmt.Errorf("CreateFile: %w", err)
-	}
-
-	// Сохранение файла в хранилище
 	fileHash, err := generateFileHash()
 	if err != nil {
 		return nil, fmt.Errorf("CreateFile: %w", err)
 	}
 	storageFileName := strings.ReplaceAll(fileName, " ", "_")
-	storagePath := fmt.Sprintf("%d/%s", userID, storageFileName)
+	storagePath := fmt.Sprintf("%d/%s/%s", userID, fileHash, storageFileName)
 	checksum, err := fs.storage.PutFile(ctx, storagePath, file)
 	if err != nil {
 		return nil, fmt.Errorf("CreateFile: upload: %w", err)
 	}
 
-	// Сохранение информации о файле в БД
 	created, err := fs.uow.Files().CreateFile(ctx, entities.File{
 		Owner:           userID,
 		FileName:        fileName,
@@ -120,6 +109,9 @@ func (fs *FileService) CreateFile(
 	})
 	if err != nil {
 		_ = fs.storage.DeleteFile(ctx, storagePath)
+		if errors.Is(err, repository.ErrUniqueViolation) {
+			return nil, ErrFileAlreadyExists
+		}
 		return nil, fmt.Errorf("CreateFile: %w", err)
 	}
 	return created, nil

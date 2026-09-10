@@ -28,6 +28,6 @@ func testHandler(us userService) *Handler {
 }
 
 func withUserID(r *http.Request, id int64) *http.Request {
-	ctx := context.WithValue(r.Context(), middlewares.UserIDKey, id)
+	ctx := middlewares.ContextWithUserID(r.Context(), id)
 	return r.WithContext(ctx)
 }

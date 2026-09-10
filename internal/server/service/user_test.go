@@ -33,10 +33,7 @@ func TestRegisterUser(t *testing.T) {
 
 		uowMock.EXPECT().BeginTx(ctx).Return(uowTxMock, nil)
 		uowTxMock.EXPECT().Rollback(ctx).Return(nil)
-		uowTxMock.EXPECT().Users().Return(userRepoMock).Times(2)
-		userRepoMock.EXPECT().
-			GetByLogin(ctx, "user").
-			Return(nil, repository.ErrNoRows)
+		uowTxMock.EXPECT().Users().Return(userRepoMock)
 		userRepoMock.EXPECT().
 			CreateUser(ctx, gomock.Any()).
 			Return(&entities.User{ID: 1, Login: "user"}, nil)
@@ -76,8 +73,8 @@ func TestRegisterUser(t *testing.T) {
 		uowTxMock.EXPECT().Rollback(ctx).Return(nil)
 		uowTxMock.EXPECT().Users().Return(userRepoMock)
 		userRepoMock.EXPECT().
-			GetByLogin(ctx, "user").
-			Return(&entities.User{ID: 1, Login: "user"}, nil)
+			CreateUser(ctx, gomock.Any()).
+			Return(nil, repository.ErrUniqueViolation)
 
 		us := NewUserService(uowMock)
 		_, err := us.RegisterUser(ctx, "user", "12345")

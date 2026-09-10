@@ -44,7 +44,7 @@ func (m *Middleware) LogResponse(handler http.Handler) http.Handler {
 			zap.Int("size", responseData.size),
 		}
 
-		if userID, ok := r.Context().Value(UserIDKey).(int64); ok {
+		if userID, ok := UserIDFromContext(r.Context()); ok {
 			fields = append(fields, zap.Int64("user_id", userID))
 		}
 

@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -23,9 +22,9 @@ import (
 //	@Summary		Регистрация пользователя
 //	@Tags			auth
 //	@Accept			json
-//	@Produce		plain
+//	@Produce		json
 //	@Param			body	body		api.RegisterRequest	true	"Данные пользователя"
-//	@Success		200
+//	@Success		200	{object}	api.LoginResponse
 //	@Failure		400	{string}	string	"Неверный формат запроса или недопустимая длина логина либо пароля"
 //	@Failure		409	{string}	string	"Логин уже занят"
 //	@Failure		500	{string}	string	"Внутренняя ошибка"
@@ -38,7 +37,7 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	user, err := h.userService.RegisterUser(context.Background(), requestData.Login, requestData.Password)
+	user, err := h.userService.RegisterUser(r.Context(), requestData.Login, requestData.Password)
 	if err != nil {
 		switch {
 		case errors.Is(err, entities.ErrIncorrectLoginLength),
@@ -83,7 +82,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	user, err := h.userService.LoginUser(context.Background(), requestData.Login, requestData.Password)
+	user, err := h.userService.LoginUser(r.Context(), requestData.Login, requestData.Password)
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrLoginPasswordNotExist):
@@ -99,13 +98,6 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	response, err := json.Marshal(api.LoginResponse{UserID: user.ID, AccessToken: token})
-	if err != nil {
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return
-	}
 	w.Header().Set("Authorization", "Bearer "+token)
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	w.Write(response)
+	writeJSON(w, h.logger, api.LoginResponse{UserID: user.ID, AccessToken: token})
 }

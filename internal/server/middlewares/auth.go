@@ -10,11 +10,22 @@ import (
 
 type contextKey string
 
-// UserIDKey ключ контекста, по которому middleware Auth сохраняет идентификатор пользователя.
-const UserIDKey contextKey = "userID"
+// userIDKey ключ контекста, по которому middleware Auth сохраняет идентификатор пользователя.
+const userIDKey contextKey = "userID"
+
+// ContextWithUserID возвращает контекст с сохранённым идентификатором пользователя.
+func ContextWithUserID(ctx context.Context, userID int64) context.Context {
+	return context.WithValue(ctx, userIDKey, userID)
+}
+
+// UserIDFromContext возвращает идентификатор пользователя из контекста.
+func UserIDFromContext(ctx context.Context) (int64, bool) {
+	userID, ok := ctx.Value(userIDKey).(int64)
+	return userID, ok
+}
 
 // Auth middleware проверяет наличие валидного Bearer-токена в заголовке Authorization.
-// При успешной проверке записывает UserID в context под ключом UserIDKey.
+// При успешной проверке сохраняет идентификатор пользователя в контексте запроса.
 // Возвращает HTTP 401, если токен отсутствует, имеет неверный формат или невалиден.
 func (m *Middleware) Auth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -33,7 +44,7 @@ func (m *Middleware) Auth(next http.Handler) http.Handler {
 			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 			return
 		}
-		ctx := context.WithValue(r.Context(), UserIDKey, userID)
+		ctx := ContextWithUserID(r.Context(), userID)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

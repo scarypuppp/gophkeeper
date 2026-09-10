@@ -30,7 +30,7 @@ import (
 //	@Failure		500		{string}	string	"Внутренняя ошибка"
 //	@Router			/api/secret [post]
 func (h *Handler) CreateSecret(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value(middlewares.UserIDKey).(int64)
+	userID, ok := middlewares.UserIDFromContext(r.Context())
 	if !ok {
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		return
@@ -82,7 +82,7 @@ func (h *Handler) CreateSecret(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500	{string}	string	"Внутренняя ошибка"
 //	@Router			/api/secret [get]
 func (h *Handler) GetSecrets(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value(middlewares.UserIDKey).(int64)
+	userID, ok := middlewares.UserIDFromContext(r.Context())
 	if !ok {
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		return
@@ -127,7 +127,7 @@ func (h *Handler) GetSecrets(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500			{string}	string	"Внутренняя ошибка"
 //	@Router			/api/secret/{secret_name} [get]
 func (h *Handler) GetSecret(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value(middlewares.UserIDKey).(int64)
+	userID, ok := middlewares.UserIDFromContext(r.Context())
 	if !ok {
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		return
@@ -173,7 +173,7 @@ func (h *Handler) GetSecret(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500			{string}	string	"Внутренняя ошибка"
 //	@Router			/api/secret/{secret_name} [put]
 func (h *Handler) UpdateSecret(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value(middlewares.UserIDKey).(int64)
+	userID, ok := middlewares.UserIDFromContext(r.Context())
 	if !ok {
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		return
@@ -230,7 +230,7 @@ func (h *Handler) UpdateSecret(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500	{string}	string	"Внутренняя ошибка"
 //	@Router			/api/secret/{secret_name} [delete]
 func (h *Handler) DeleteSecret(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value(middlewares.UserIDKey).(int64)
+	userID, ok := middlewares.UserIDFromContext(r.Context())
 	if !ok {
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		return

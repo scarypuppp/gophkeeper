@@ -5,13 +5,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/caarlos0/env/v6"
+	"github.com/caarlos0/env/v11"
 )
 
-const (
-	defaultTokenExpiresSeconds = 24 * 60 * 60 * 30 // 30 days
-	defaultSecretKey           = "default-secret-key"
-)
+const defaultTokenExpiresSeconds = 24 * 60 * 60 * 30 // 30 days
 
 type Config struct {
 	SecretKey       string `env:"SECRET_KEY"`
@@ -45,11 +42,10 @@ func parseConfig(args []string) (*Config, error) {
 	}
 
 	if cfg.SecretKey == "" {
-		if *secretKeyFlag != "" {
-			cfg.SecretKey = *secretKeyFlag
-		} else {
-			cfg.SecretKey = defaultSecretKey
+		if *secretKeyFlag == "" {
+			return nil, fmt.Errorf("secret key should not be empty: set SECRET_KEY or pass -k")
 		}
+		cfg.SecretKey = *secretKeyFlag
 	}
 	if cfg.Address == "" {
 		if *addrFlag == "" {

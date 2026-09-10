@@ -58,14 +58,6 @@ func (s *SecretsService) CreateSecret(
 	password string,
 	metadata string,
 ) (*entities.Secret, error) {
-	_, err := s.uow.Secrets().GetByName(ctx, userID, name)
-	if err == nil {
-		return nil, ErrSecretAlreadyExists
-	}
-	if !errors.Is(err, repository.ErrNoRows) {
-		return nil, fmt.Errorf("CreateSecret: %w", err)
-	}
-
 	created, err := s.uow.Secrets().CreateSecret(ctx, entities.Secret{
 		Owner:    userID,
 		Name:     name,
@@ -74,6 +66,9 @@ func (s *SecretsService) CreateSecret(
 		Metadata: metadata,
 		Checksum: checksum.Secret(login, password, metadata),
 	})
+	if errors.Is(err, repository.ErrUniqueViolation) {
+		return nil, ErrSecretAlreadyExists
+	}
 	if err != nil {
 		return nil, fmt.Errorf("CreateSecret: %w", err)
 	}

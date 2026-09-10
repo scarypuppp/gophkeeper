@@ -60,14 +60,6 @@ func (s *CardsService) CreateCard(
 	cvv string,
 	metadata string,
 ) (*entities.Card, error) {
-	_, err := s.uow.Cards().GetByName(ctx, userID, name)
-	if err == nil {
-		return nil, ErrCardAlreadyExists
-	}
-	if !errors.Is(err, repository.ErrNoRows) {
-		return nil, fmt.Errorf("CreateCard: %w", err)
-	}
-
 	created, err := s.uow.Cards().CreateCard(ctx, entities.Card{
 		Owner:     userID,
 		Name:      name,
@@ -78,6 +70,9 @@ func (s *CardsService) CreateCard(
 		Metadata:  metadata,
 		Checksum:  checksum.Card(number, holder, expiresAt, cvv, metadata),
 	})
+	if errors.Is(err, repository.ErrUniqueViolation) {
+		return nil, ErrCardAlreadyExists
+	}
 	if err != nil {
 		return nil, fmt.Errorf("CreateCard: %w", err)
 	}

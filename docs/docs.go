@@ -387,6 +387,12 @@ const docTemplate = `{
                             "type": "string"
                         }
                     },
+                    "413": {
+                        "description": "Файл превышает допустимый размер",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
                     "500": {
                         "description": "Внутренняя ошибка",
                         "schema": {
@@ -515,6 +521,12 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Файл не найден",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "413": {
+                        "description": "Файл превышает допустимый размер",
                         "schema": {
                             "type": "string"
                         }
@@ -1282,7 +1294,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "produces": [
-                    "text/plain"
+                    "application/json"
                 ],
                 "tags": [
                     "auth"
@@ -1301,7 +1313,10 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK"
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.LoginResponse"
+                        }
                     },
                     "400": {
                         "description": "Неверный формат запроса или недопустимая длина логина либо пароля",

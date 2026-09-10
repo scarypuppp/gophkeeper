@@ -60,12 +60,12 @@ func (r *TextRepositoryPostgres) CreateText(ctx context.Context, text entities.T
     RETURNING id, created_at, updated_at`
 	rows, err := sqlx.NamedQueryContext(ctx, r.exec, insertQuery, text)
 	if err != nil {
-		return nil, fmt.Errorf("CreateText: %w", err)
+		return nil, wrapError("CreateText", err)
 	}
 	defer rows.Close()
 	if !rows.Next() {
 		if err := rows.Err(); err != nil {
-			return nil, fmt.Errorf("CreateText: rows iteration: %w", err)
+			return nil, wrapError("CreateText: rows iteration", err)
 		}
 		return nil, fmt.Errorf("CreateText: no id returned after insert")
 	}

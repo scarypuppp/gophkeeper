@@ -60,12 +60,12 @@ func (r *SecretRepositoryPostgres) CreateSecret(ctx context.Context, secret enti
     RETURNING id, created_at, updated_at`
 	rows, err := sqlx.NamedQueryContext(ctx, r.exec, insertQuery, secret)
 	if err != nil {
-		return nil, fmt.Errorf("CreateSecret: %w", err)
+		return nil, wrapError("CreateSecret", err)
 	}
 	defer rows.Close()
 	if !rows.Next() {
 		if err := rows.Err(); err != nil {
-			return nil, fmt.Errorf("CreateSecret: rows iteration: %w", err)
+			return nil, wrapError("CreateSecret: rows iteration", err)
 		}
 		return nil, fmt.Errorf("CreateSecret: no id returned after insert")
 	}

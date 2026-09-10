@@ -57,14 +57,6 @@ func (s *TextsService) CreateText(
 	text string,
 	metadata string,
 ) (*entities.Text, error) {
-	_, err := s.uow.Texts().GetByName(ctx, userID, name)
-	if err == nil {
-		return nil, ErrTextAlreadyExists
-	}
-	if !errors.Is(err, repository.ErrNoRows) {
-		return nil, fmt.Errorf("CreateText: %w", err)
-	}
-
 	created, err := s.uow.Texts().CreateText(ctx, entities.Text{
 		Owner:    userID,
 		Name:     name,
@@ -72,6 +64,9 @@ func (s *TextsService) CreateText(
 		Metadata: metadata,
 		Checksum: checksum.Text(text, metadata),
 	})
+	if errors.Is(err, repository.ErrUniqueViolation) {
+		return nil, ErrTextAlreadyExists
+	}
 	if err != nil {
 		return nil, fmt.Errorf("CreateText: %w", err)
 	}

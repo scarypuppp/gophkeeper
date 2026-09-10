@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 
 	"github.com/scarypuppp/gophkeeper/internal/api"
@@ -15,7 +16,14 @@ import (
 // ErrFileNotFound возвращается, если сервер ответил 404 на операцию с файлом.
 var ErrFileNotFound = errors.New("file not found")
 
+// ErrFileTooLarge возвращается, если файл больше лимита сервера.
+var ErrFileTooLarge = errors.New("file is too large")
+
 func (i *Interactor) UploadFile(token string, filePath string, metadata string) (*api.CreateFileResponse, error) {
+	if err := checkUploadSize(filePath); err != nil {
+		return nil, err
+	}
+
 	resp, err := i.httpClient.R().
 		SetAuthToken(token).
 		SetFile("file", filePath).
@@ -23,6 +31,9 @@ func (i *Interactor) UploadFile(token string, filePath string, metadata string) 
 		Post("/api/file/upload")
 	if err != nil {
 		return nil, i.requestError(err)
+	}
+	if resp.StatusCode() == http.StatusRequestEntityTooLarge {
+		return nil, fmt.Errorf("%w: server rejected the upload: %s", ErrFileTooLarge, strings.TrimSpace(resp.String()))
 	}
 	if resp.IsError() {
 		return nil, serverError(resp)
@@ -105,6 +116,10 @@ func (i *Interactor) UpdateFileMetadata(token string, fileHash string, fileName 
 
 // UpdateFileContent перезаписывает содержимое файла на сервере.
 func (i *Interactor) UpdateFileContent(token string, fileHash string, fileName string, localPath string) (*api.FileResponse, error) {
+	if err := checkUploadSize(localPath); err != nil {
+		return nil, err
+	}
+
 	var fileResponse api.FileResponse
 	resp, err := i.httpClient.R().
 		SetAuthToken(token).
@@ -116,6 +131,9 @@ func (i *Interactor) UpdateFileContent(token string, fileHash string, fileName s
 	}
 	if resp.StatusCode() == http.StatusNotFound {
 		return nil, ErrFileNotFound
+	}
+	if resp.StatusCode() == http.StatusRequestEntityTooLarge {
+		return nil, fmt.Errorf("%w: server rejected the upload: %s", ErrFileTooLarge, strings.TrimSpace(resp.String()))
 	}
 	if resp.IsError() {
 		return nil, serverError(resp)
@@ -136,6 +154,21 @@ func (i *Interactor) DeleteFile(token string, fileHash string, fileName string) 
 	}
 	if resp.IsError() {
 		return serverError(resp)
+	}
+	return nil
+}
+
+// checkUploadSize проверяет, что файл не превышает api.MaxFileUploadSize.
+func checkUploadSize(localPath string) error {
+	info, err := os.Stat(localPath)
+	if err != nil {
+		return fmt.Errorf("error reading file %s: %w", localPath, err)
+	}
+	if info.IsDir() {
+		return fmt.Errorf("%s is a directory, not a file", localPath)
+	}
+	if info.Size() > api.MaxFileUploadSize {
+		return fmt.Errorf("%w: %d bytes, limit is %d bytes", ErrFileTooLarge, info.Size(), int64(api.MaxFileUploadSize))
 	}
 	return nil
 }

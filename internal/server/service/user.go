@@ -50,20 +50,15 @@ func (us *UserService) RegisterUser(
 	}
 	defer tx.Rollback(ctx)
 
-	_, err = tx.Users().GetByLogin(ctx, login)
-	if err == nil {
-		return nil, ErrLoginAlreadyExists
-	}
-	if !errors.Is(err, repository.ErrNoRows) {
-		return nil, fmt.Errorf("RegisterUser: check login: %w", err)
-	}
-
 	passwordHash, err := auth.HashPassword(password)
 	if err != nil {
 		return nil, fmt.Errorf("RegisterUser: hash password: %w", err)
 	}
 
 	user, err := tx.Users().CreateUser(ctx, entities.User{Login: login, Password: passwordHash})
+	if errors.Is(err, repository.ErrUniqueViolation) {
+		return nil, ErrLoginAlreadyExists
+	}
 	if err != nil {
 		return nil, fmt.Errorf("RegisterUser: create user: %w", err)
 	}

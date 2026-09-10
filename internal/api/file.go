@@ -2,6 +2,9 @@ package api
 
 import "time"
 
+// MaxFileUploadSize — максимальный размер загружаемого файла.
+const MaxFileUploadSize = 1 << 30 // 1 GiB
+
 type CreateFileResponse struct {
 	FileName  string    `json:"file_name"`
 	FileHash  string    `json:"file_hash"`

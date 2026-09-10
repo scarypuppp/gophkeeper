@@ -1,7 +1,6 @@
 package middlewares
 
 import (
-	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -31,7 +30,7 @@ func TestAuth_Success(t *testing.T) {
 	mw := testMiddleware()
 	var gotID int64
 	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		gotID, _ = r.Context().Value(UserIDKey).(int64)
+		gotID, _ = UserIDFromContext(r.Context())
 		w.WriteHeader(http.StatusOK)
 	})
 
@@ -76,7 +75,7 @@ func TestLogRequest(t *testing.T) {
 	mw := testMiddleware()
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest(http.MethodGet, "/ping", nil)
-	ctx := context.WithValue(r.Context(), UserIDKey, int64(1))
+	ctx := ContextWithUserID(r.Context(), int64(1))
 	mw.LogRequest(http.HandlerFunc(okHandler)).ServeHTTP(w, r.WithContext(ctx))
 	assert.Equal(t, http.StatusOK, w.Code)
 }
@@ -85,7 +84,7 @@ func TestLogResponse(t *testing.T) {
 	mw := testMiddleware()
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest(http.MethodGet, "/ping", nil)
-	ctx := context.WithValue(r.Context(), UserIDKey, int64(1))
+	ctx := ContextWithUserID(r.Context(), int64(1))
 	mw.LogResponse(http.HandlerFunc(okHandler)).ServeHTTP(w, r.WithContext(ctx))
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.Equal(t, "ok", w.Body.String())

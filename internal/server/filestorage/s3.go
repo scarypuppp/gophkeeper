@@ -1,3 +1,4 @@
+//go:generate mockgen -destination=mocks/mock_file_storage.go -package=mocks . FileStorage
 package filestorage
 
 import (
@@ -13,6 +14,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 )
+
+// FileStorage описывает операции хранилища файлов, используемые FileService.
+type FileStorage interface {
+	GetFile(ctx context.Context, path string) (io.ReadCloser, error)
+	PutFile(ctx context.Context, path string, file io.Reader) (string, error)
+	DeleteFile(ctx context.Context, path string) error
+}
 
 type S3Storage struct {
 	Bucket string

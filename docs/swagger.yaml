@@ -571,6 +571,10 @@ paths:
           description: Файл не найден
           schema:
             type: string
+        "413":
+          description: Файл превышает допустимый размер
+          schema:
+            type: string
         "500":
           description: Внутренняя ошибка
           schema:
@@ -660,6 +664,10 @@ paths:
             type: string
         "409":
           description: Файл с таким содержимым уже загружен
+          schema:
+            type: string
+        "413":
+          description: Файл превышает допустимый размер
           schema:
             type: string
         "500":
@@ -1079,10 +1087,12 @@ paths:
         schema:
           $ref: '#/definitions/api.RegisterRequest'
       produces:
-      - text/plain
+      - application/json
       responses:
         "200":
           description: OK
+          schema:
+            $ref: '#/definitions/api.LoginResponse'
         "400":
           description: Неверный формат запроса или недопустимая длина логина либо
             пароля

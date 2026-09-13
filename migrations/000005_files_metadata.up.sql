@@ -1,0 +1,2 @@
+ALTER TABLE files
+    ADD COLUMN metadata VARCHAR NOT NULL DEFAULT '';
